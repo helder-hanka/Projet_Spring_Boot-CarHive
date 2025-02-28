@@ -1,0 +1,26 @@
+package com.ProjetVde.CarHive.service;
+
+import com.ProjetVde.CarHive.entity.UserProfile;
+import com.ProjetVde.CarHive.repository.UserProfileRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service
+public class UserProfileService {
+
+    @Autowired
+    public UserProfileRepository userProfileRepository;
+
+    public UserProfile create(UserProfile userProfile) {
+        return userProfileRepository.save(userProfile);
+    }
+    public UserProfile update(UserProfile userProfile){
+        return userProfileRepository.save(userProfile);
+    }
+    public void delete(Long id){
+        userProfileRepository.deleteById(id);
+    }
+    public UserProfile getById(Long id){
+        return userProfileRepository.findById(id).orElse(null);
+    }
+}
