@@ -16,7 +16,7 @@ public class User {
     private String email;
 
     @Column(nullable = false, length = 200)
-    @JsonIgnore
+    //@JsonIgnore
     private String password;
 
     // Relation OneToOne avec UserProfile

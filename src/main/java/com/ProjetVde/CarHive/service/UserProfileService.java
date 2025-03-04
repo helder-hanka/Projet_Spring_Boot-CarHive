@@ -18,9 +18,15 @@ public class UserProfileService {
         return userProfileRepository.save(userProfile);
     }
     public void delete(Long id){
-        userProfileRepository.deleteById(id);
+        if (userProfileRepository.existsById(id)) {
+            userProfileRepository.deleteById(id);
+        } else {
+            // Ajouter un comportement si l'élément n'existe pas (ex : exception)
+            throw new IllegalArgumentException("UserProfile not found with id ");
+        }
     }
     public UserProfile getById(Long id){
-        return userProfileRepository.findById(id).orElse(null);
+        return userProfileRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("UserProfile not found with id "));
     }
 }

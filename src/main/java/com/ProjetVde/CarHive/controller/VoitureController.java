@@ -8,11 +8,13 @@ import com.ProjetVde.CarHive.service.VoitureService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Objects;
 import java.util.Optional;
 
+@PreAuthorize("isAuthenticated()")
 @RestController
 @RequestMapping("/voiture")
 public class VoitureController {
@@ -76,7 +78,7 @@ public class VoitureController {
             return ResponseEntity.internalServerError().body("Une erreur est survenue : " + e.getMessage());
         }
     }
-    @GetMapping("/")
+    @GetMapping
     public ResponseEntity<?> getAll() {
         try {
             return ResponseEntity.ok(voitureService.getAll());
