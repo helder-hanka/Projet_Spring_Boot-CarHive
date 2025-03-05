@@ -5,9 +5,6 @@ import lombok.Data;
 
 @Data
 public class VoitureRequest {
-//    @NotBlank(message = "L'id d'utilisateur manquant")
-//    private String userId;
-
     @NotBlank(message = "L'immatriculation est obligatoire")
     private String immatriculation;
 

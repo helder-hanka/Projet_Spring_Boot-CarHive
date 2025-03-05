@@ -10,6 +10,8 @@ import com.ProjetVde.CarHive.utils.SecurityUtils;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -48,16 +50,9 @@ public class VoitureController {
             return ResponseEntity.badRequest().body(erreurs);
         }
 
-        ResponseEntity<?> response = securityUtils.getAuthenticatedUserProfile(); // 🔹 Utilisation de SecurityUtils
-        if (!response.getStatusCode().is2xxSuccessful()) {
-            return response;
-        }
-        UserProfile userProfile = (UserProfile) response.getBody();
-
         try {
-            if (userProfile == null) {
-                return ResponseEntity.badRequest().body("L'utilisateur n'existe pas");
-            }
+            ResponseEntity<?> response = securityUtils.getAuthenticatedUserProfile();
+            UserProfile userProfile = (UserProfile) response.getBody();
 
             // Vérifier si la couleur existe, sinon la créer
             Optional<Color> colorOpt = colorService.getByName(voitureRequest.getColor());
@@ -110,7 +105,6 @@ public class VoitureController {
 
     @GetMapping("/public/{voitureId}")
     public ResponseEntity<?> getById(@PathVariable Long voitureId) {
-        System.out.println("Get Id: "+voitureId);
         try {
             Voiture voiture = voitureService.getById(voitureId);
             if (voiture == null) {
@@ -133,15 +127,10 @@ public class VoitureController {
             return ResponseEntity.badRequest().body(erreurs);
         }
 
-        ResponseEntity<?> response = securityUtils.getAuthenticatedUserProfile();
-        if (!response.getStatusCode().is2xxSuccessful()) {
-            return response;
-        }
-        UserProfile userProfile = (UserProfile) response.getBody();
-        if (userProfile == null) {
-            return ResponseEntity.badRequest().body("L'utilisateur n'existe pas");
-        }
         try{
+            ResponseEntity<?> response = securityUtils.getAuthenticatedUserProfile();
+            UserProfile userProfile = (UserProfile) response.getBody();
+
             Voiture voiture = voitureService.getById(id);
             if (voiture == null) {
                 return ResponseEntity.badRequest().body("La voiture n'existe pas");
@@ -184,16 +173,10 @@ public class VoitureController {
     @DeleteMapping("/{voitureId}")
     public ResponseEntity<?> deleteById(@PathVariable Long voitureId ){
 
-        ResponseEntity<?> response = securityUtils.getAuthenticatedUserProfile();
-        if (!response.getStatusCode().is2xxSuccessful()) {
-            return response;
-        }
-        UserProfile userProfile = (UserProfile) response.getBody();
-        // Vérifier si l'utilisateur existe
-        if (userProfile == null) {
-            return ResponseEntity.badRequest().body("L'utilisateur n'existe pas");
-        }
         try{
+            ResponseEntity<?> response = securityUtils.getAuthenticatedUserProfile();
+            UserProfile userProfile = (UserProfile) response.getBody();
+
             Voiture voiture = voitureService.getById(voitureId);  // Récupération de la voiture par son ID
             if (voiture == null) {
                 return ResponseEntity.badRequest().body("La voiture n'existe pas");
