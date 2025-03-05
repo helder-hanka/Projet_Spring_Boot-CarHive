@@ -5,6 +5,8 @@ import com.ProjetVde.CarHive.repository.VoitureRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class VoitureService {
 
@@ -23,7 +25,7 @@ public class VoitureService {
         voitureRepository.deleteById(id);
     }
 
-    public Iterable<Voiture> getAll() {
+    public List<Voiture> getAll() {
         return voitureRepository.findAll();
     }
 
