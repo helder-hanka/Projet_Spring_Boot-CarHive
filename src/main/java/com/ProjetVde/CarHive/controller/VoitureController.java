@@ -1,20 +1,21 @@
 package com.ProjetVde.CarHive.controller;
 
 import com.ProjetVde.CarHive.entity.*;
+import com.ProjetVde.CarHive.repository.UserRepository;
 import com.ProjetVde.CarHive.service.ColorService;
 import com.ProjetVde.CarHive.service.GarageService;
 import com.ProjetVde.CarHive.service.UserProfileService;
 import com.ProjetVde.CarHive.service.VoitureService;
+import com.ProjetVde.CarHive.utils.SecurityUtils;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
-@PreAuthorize("isAuthenticated()")
+//@PreAuthorize("isAuthenticated()")
 @RestController
 @RequestMapping("/voiture")
 public class VoitureController {
@@ -30,15 +31,30 @@ public class VoitureController {
 
     @Autowired
     private ColorService colorService;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private SecurityUtils securityUtils;
 
     @PostMapping("/create")
-    public ResponseEntity<?> create(@Valid @RequestBody VoitureRequest voitureRequest) {
+    public ResponseEntity<?> create(@Valid @RequestBody VoitureRequest voitureRequest, BindingResult bindingResult) {
+
+        if (bindingResult.hasErrors()) {
+            // Construire un message d'erreur
+            Map<String, String> erreurs = new HashMap<>();
+            bindingResult.getFieldErrors().forEach(error ->
+                    erreurs.put(error.getField(), error.getDefaultMessage())
+            );
+            return ResponseEntity.badRequest().body(erreurs);
+        }
+
+        ResponseEntity<?> response = securityUtils.getAuthenticatedUserProfile(); // 🔹 Utilisation de SecurityUtils
+        if (!response.getStatusCode().is2xxSuccessful()) {
+            return response;
+        }
+        UserProfile userProfile = (UserProfile) response.getBody();
+
         try {
-            // Vérifier si l'utilisateur existe
-            if (userProfileService.getById(Long.valueOf(voitureRequest.getUserId())) == null) {
-                return ResponseEntity.badRequest().body("L'utilisateur n'existe pas");
-            }
-            UserProfile userProfile = userProfileService.getById(Long.valueOf(voitureRequest.getUserId()));
             if (userProfile == null) {
                 return ResponseEntity.badRequest().body("L'utilisateur n'existe pas");
             }
@@ -78,18 +94,25 @@ public class VoitureController {
             return ResponseEntity.internalServerError().body("Une erreur est survenue : " + e.getMessage());
         }
     }
-    @GetMapping
+
+    @GetMapping("/public")
     public ResponseEntity<?> getAll() {
         try {
-            return ResponseEntity.ok(voitureService.getAll());
+            Iterable<Voiture> voitures = voitureService.getAll();
+                    if(voitures == null) {
+                        return ResponseEntity.badRequest().body("La voiture n'existe pas");
+                    }
+            return ResponseEntity.ok(voitures);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Une erreur est survenue : " + e.getMessage());
         }
     }
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getById(@PathVariable Long id) {
+
+    @GetMapping("/public/{voitureId}")
+    public ResponseEntity<?> getById(@PathVariable Long voitureId) {
+        System.out.println("Get Id: "+voitureId);
         try {
-            Voiture voiture = voitureService.getById(id);
+            Voiture voiture = voitureService.getById(voitureId);
             if (voiture == null) {
                 return ResponseEntity.badRequest().body("La voiture n'existe pas");
             }
@@ -98,28 +121,58 @@ public class VoitureController {
             return ResponseEntity.internalServerError().body("Une erreur est survenue : " + e.getMessage());
         }
     }
+
     @PutMapping("/{id}")
-    public ResponseEntity<?> putById(@PathVariable Long id, @Valid @RequestBody VoitureRequest voitureRequest) {
+    public ResponseEntity<?> putById(@PathVariable Long id, @Valid @RequestBody VoitureRequest voitureRequest, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            // Construire un message d'erreur
+            Map<String, String> erreurs = new HashMap<>();
+            bindingResult.getFieldErrors().forEach(error ->
+                    erreurs.put(error.getField(), error.getDefaultMessage())
+            );
+            return ResponseEntity.badRequest().body(erreurs);
+        }
+
+        ResponseEntity<?> response = securityUtils.getAuthenticatedUserProfile();
+        if (!response.getStatusCode().is2xxSuccessful()) {
+            return response;
+        }
+        UserProfile userProfile = (UserProfile) response.getBody();
+        if (userProfile == null) {
+            return ResponseEntity.badRequest().body("L'utilisateur n'existe pas");
+        }
         try{
-            // Vérifier si l'utilisateur existe
-            if (userProfileService.getById(Long.valueOf(voitureRequest.getUserId())) == null) {
-                return ResponseEntity.badRequest().body("L'utilisateur n'existe pas");
-            }
             Voiture voiture = voitureService.getById(id);
-            if (voiture == null){
+            if (voiture == null) {
                 return ResponseEntity.badRequest().body("La voiture n'existe pas");
             }
-            UserProfile userProfile = userProfileService.getById(Long.valueOf(voitureRequest.getUserId()));
-            if (userProfile == null || !Objects.equals(userProfile.getId(), voiture.getUserProfile().getId())){
-                return ResponseEntity.badRequest().body("L'utilisateur n'existe pas");
-            }
+
             voiture.setImmatriculation(voitureRequest.getImmatriculation());
             voiture.setMarque(voitureRequest.getMarque());
             voiture.setModele(voitureRequest.getModele());
             voiture.setAnnee(voitureRequest.getAnnee());
-            voiture.setUserProfile(userProfileService.getById(Long.valueOf(voitureRequest.getUserId())));
-            voiture.setColor(colorService.getByName(voitureRequest.getColor()).orElse(null));
-            voiture.setGarage(garageService.getByName(voitureRequest.getNomGarage()).orElse(null));
+            voiture.setUserProfile(userProfileService.getById(userProfile.getId()));
+
+            // Gérer la couleur
+            Color color = colorService.getByName(voitureRequest.getColor())
+                    .orElseGet(() -> {
+                        Color newColor = new Color();
+                        newColor.setColor(voitureRequest.getColor());
+                        return colorService.create(newColor);
+                    });
+            voiture.setColor(color);
+
+            // Gérer le garage
+            Garage garage = garageService.getByName(voitureRequest.getNomGarage())
+                    .orElseGet(() -> {
+                        Garage newGarage = new Garage();
+                        newGarage.setNom(voitureRequest.getNomGarage());
+                        newGarage.setAdresse(voitureRequest.getAdresseGarage());
+                        newGarage.setTelephone(voitureRequest.getTelephoneGarage());
+                        return garageService.create(newGarage);
+                    });
+            voiture.setGarage(garage);
+
             voitureService.update(voiture);
             return ResponseEntity.ok(voiture);
         }catch (Exception e) {
@@ -128,20 +181,27 @@ public class VoitureController {
 
     }
 
-    @DeleteMapping("/{voitureId}/{userId}")
-    public ResponseEntity<?> deleteById(@PathVariable Long voitureId , @PathVariable Long userId){
+    @DeleteMapping("/{voitureId}")
+    public ResponseEntity<?> deleteById(@PathVariable Long voitureId ){
+
+        ResponseEntity<?> response = securityUtils.getAuthenticatedUserProfile();
+        if (!response.getStatusCode().is2xxSuccessful()) {
+            return response;
+        }
+        UserProfile userProfile = (UserProfile) response.getBody();
+        // Vérifier si l'utilisateur existe
+        if (userProfile == null) {
+            return ResponseEntity.badRequest().body("L'utilisateur n'existe pas");
+        }
         try{
-            // Vérifier si l'utilisateur existe
-            if (userProfileService.getById(userId) == null) {
-                return ResponseEntity.badRequest().body("L'utilisateur n'existe pas");
-            }
-            Voiture voiture = voitureService.getById(voitureId);
-            if (voiture == null){
+            Voiture voiture = voitureService.getById(voitureId);  // Récupération de la voiture par son ID
+            if (voiture == null) {
                 return ResponseEntity.badRequest().body("La voiture n'existe pas");
             }
-            UserProfile userProfile = userProfileService.getById(userId);
-            if (userProfile == null || !Objects.equals(userProfile.getId(), voiture.getUserProfile().getId())){
-                return ResponseEntity.badRequest().body("L'utilisateur n'existe pas");
+
+            // Vérifier que l'utilisateur a bien la voiture (si besoin)
+            if (!voiture.getUserProfile().getId().equals(userProfile.getId())) {
+                return ResponseEntity.badRequest().body("Cette voiture ne vous appartient pas");
             }
             voitureService.delete(voitureId);
             return ResponseEntity.ok("Voiture supprimée avec succès");

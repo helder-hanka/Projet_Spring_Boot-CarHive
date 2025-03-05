@@ -19,8 +19,12 @@ public class User {
     //@JsonIgnore
     private String password;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
+
     // Relation OneToOne avec UserProfile
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "userProfileId")
     private UserProfile userProfile;
 }

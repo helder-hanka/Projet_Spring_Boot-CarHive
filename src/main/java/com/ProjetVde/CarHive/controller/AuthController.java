@@ -43,8 +43,8 @@ public class AuthController {
     }
     @PostMapping("/signup")
     public ResponseEntity <?> registerUser(@RequestBody User user) {
-        if(user.getEmail() == null || user.getPassword() == null || user.getPassword().isEmpty()){
-            return ResponseEntity.badRequest().body("L'email or password est vide");
+        if(user.getEmail() == null || user.getPassword() == null || user.getPassword().isEmpty() || user.getRole() == null){
+            return ResponseEntity.badRequest().body("L'email or password or role est vide");
         }
         if (userRepository.existsByEmail(user.getEmail())) {
             return ResponseEntity.badRequest().body("Email address already in use.");
@@ -55,6 +55,7 @@ public class AuthController {
             newUser.setId(null);
             newUser.setEmail(user.getEmail());
             newUser.setPassword(encoder.encode(user.getPassword()));
+            newUser.setRole(user.getRole());
             userRepository.save(newUser);
             return ResponseEntity.ok("User registered successfully");
         } catch (Exception e) {
