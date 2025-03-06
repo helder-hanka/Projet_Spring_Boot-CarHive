@@ -160,8 +160,8 @@ public class VoitureController {
                     });
             voiture.setGarage(garage);
 
-            voitureService.update(voiture);
-            return ResponseEntity.ok(voiture);
+            Voiture updateVoiture = voitureService.update(voiture);
+            return ResponseEntity.ok(updateVoiture);
         }catch (Exception e) {
             return ResponseEntity.internalServerError().body("Une erreur est survenue : " + e.getMessage());
         }
