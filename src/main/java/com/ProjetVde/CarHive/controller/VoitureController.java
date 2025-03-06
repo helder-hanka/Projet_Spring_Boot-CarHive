@@ -104,10 +104,11 @@ public class VoitureController {
     @GetMapping("/public/{voitureId}")
     public ResponseEntity<?> getById(@PathVariable Long voitureId) {
         try {
-            Voiture voiture = voitureService.getById(voitureId);
-            if (voiture == null) {
+            Optional<Voiture> voitureOp = voitureService.getById(voitureId);
+            if(voitureOp.isEmpty()) {
                 return ResponseEntity.badRequest().body("La voiture n'existe pas");
             }
+            Voiture voiture = voitureOp.get();
             return ResponseEntity.ok(voiture);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Une erreur est survenue : " + e.getMessage());
@@ -129,10 +130,11 @@ public class VoitureController {
             ResponseEntity<?> response = securityUtils.getAuthenticatedUserProfile();
             UserProfile userProfile = (UserProfile) response.getBody();
 
-            Voiture voiture = voitureService.getById(id);
-            if (voiture == null) {
+            Optional<Voiture> voitureOp = voitureService.getById(id);
+            if(voitureOp.isEmpty()){
                 return ResponseEntity.badRequest().body("La voiture n'existe pas");
             }
+            Voiture voiture = voitureOp.get();
 
             voiture.setImmatriculation(voitureRequest.getImmatriculation());
             voiture.setMarque(voitureRequest.getMarque());
@@ -175,12 +177,14 @@ public class VoitureController {
             ResponseEntity<?> response = securityUtils.getAuthenticatedUserProfile();
             UserProfile userProfile = (UserProfile) response.getBody();
 
-            Voiture voiture = voitureService.getById(voitureId);  // Récupération de la voiture par son ID
-            if (voiture == null) {
+            Optional<Voiture> voitureOpt = voitureService.getById(voitureId);
+            if (voitureOpt.isEmpty()) {
                 return ResponseEntity.badRequest().body("La voiture n'existe pas");
             }
+            Voiture voiture = voitureOpt.get();
 
             // Vérifier que l'utilisateur a bien la voiture (si besoin)
+            assert userProfile != null;
             if (!voiture.getUserProfile().getId().equals(userProfile.getId())) {
                 return ResponseEntity.badRequest().body("Cette voiture ne vous appartient pas");
             }
