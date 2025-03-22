@@ -58,7 +58,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**", "/voiture/public/**").permitAll()
                         .requestMatchers("/api/users/**").hasRole("USER")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-
                         .anyRequest().authenticated()
                 );
 

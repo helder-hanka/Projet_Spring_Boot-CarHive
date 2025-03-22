@@ -1,11 +1,15 @@
 package com.ProjetVde.CarHive.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 @Component
 public class AuthEntryPointJwt implements AuthenticationEntryPoint{
@@ -15,6 +19,16 @@ public class AuthEntryPointJwt implements AuthenticationEntryPoint{
             HttpServletResponse response,
             AuthenticationException authException
     ) throws IOException {
-        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Error: Unauthorized");
+System.out.println(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        Map<String, Object> body = new HashMap<>();
+        body.put("status", HttpServletResponse.SC_UNAUTHORIZED);
+        body.put("error", "Unauthorized");
+        body.put("message", authException.getMessage());
+        body.put("path", request.getRequestURI());
+
+        ObjectMapper mapper = new ObjectMapper();
+        response.getOutputStream().println(mapper.writeValueAsString(body));
     }
 }

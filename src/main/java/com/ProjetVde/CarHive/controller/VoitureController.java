@@ -38,14 +38,14 @@ public class VoitureController {
 
     @PostMapping("/create")
     public ResponseEntity<?> create(@Valid @RequestBody VoitureRequest voitureRequest, BindingResult bindingResult) {
-
+        Map<String, String> resBody = new HashMap<>();
         if (bindingResult.hasErrors()) {
             // Construire un message d'erreur
-            Map<String, String> erreurs = new HashMap<>();
+
             bindingResult.getFieldErrors().forEach(error ->
-                    erreurs.put(error.getField(), error.getDefaultMessage())
+                    resBody.put(error.getField(), error.getDefaultMessage())
             );
-            return ResponseEntity.badRequest().body(erreurs);
+            return ResponseEntity.badRequest().body(resBody);
         }
 
         try {
@@ -82,9 +82,14 @@ public class VoitureController {
 
             // Sauvegarde et retour de l'objet
             Voiture createdVoiture = voitureService.create(voiture);
-            return ResponseEntity.ok(createdVoiture);
+//            return ResponseEntity.ok(createdVoiture);
+            resBody.put("message", "Create successful");
+            resBody.put("car", String.valueOf(createdVoiture));
+            return ResponseEntity.ok(resBody);
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Une erreur est survenue : " + e.getMessage());
+            resBody.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(resBody);
+//            return ResponseEntity.internalServerError().body("Une erreur est survenue : " + e.getMessage());
         }
     }
 
