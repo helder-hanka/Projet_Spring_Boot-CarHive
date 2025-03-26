@@ -41,7 +41,6 @@ public class VoitureController {
         Map<String, String> resBody = new HashMap<>();
         if (bindingResult.hasErrors()) {
             // Construire un message d'erreur
-
             bindingResult.getFieldErrors().forEach(error ->
                     resBody.put(error.getField(), error.getDefaultMessage())
             );

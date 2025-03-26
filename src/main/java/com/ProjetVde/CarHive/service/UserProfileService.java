@@ -22,11 +22,11 @@ public class UserProfileService {
             userProfileRepository.deleteById(id);
         } else {
             // Ajouter un comportement si l'élément n'existe pas (ex : exception)
-            throw new IllegalArgumentException("UserProfile not found with id ");
+            throw new IllegalArgumentException("UserProfile not found with");
         }
     }
     public UserProfile getById(Long id){
         return userProfileRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("UserProfile not found with id "));
+                .orElseThrow(() -> new IllegalArgumentException("UserProfile not found with"));
     }
 }

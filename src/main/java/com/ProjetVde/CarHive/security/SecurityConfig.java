@@ -9,6 +9,7 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,6 +19,7 @@ import org.springframework.web.cors.CorsConfiguration; // Import CorsConfigurati
 import org.springframework.web.cors.CorsConfigurationSource;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 public class SecurityConfig {
@@ -59,14 +61,14 @@ public class SecurityConfig {
                     @Override
                     public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
                         CorsConfiguration configuration = new CorsConfiguration();
-                        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200"));
+                        configuration.setAllowedOrigins(List.of("http://localhost:4200"));
                         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                         configuration.setAllowedHeaders(Arrays.asList("Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"));
                         configuration.setAllowCredentials(true);
                         return configuration;
                     }
                 }))
-                .csrf(csrf -> csrf.disable())
+                .csrf(AbstractHttpConfigurer::disable)
                 .exceptionHandling(exceptionHandling -> exceptionHandling.authenticationEntryPoint(unauthorizedHandler))
                 .sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
