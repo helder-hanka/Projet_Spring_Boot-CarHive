@@ -33,4 +33,9 @@ public class VoitureService {
     public Optional<Voiture> getById(Long id) {
         return voitureRepository.findById(id);
     }
+
+    public List<Voiture>getByUserProfileId(Long userProfileId){
+        return voitureRepository.findByUserProfileId(userProfileId);
+    }
+
 }

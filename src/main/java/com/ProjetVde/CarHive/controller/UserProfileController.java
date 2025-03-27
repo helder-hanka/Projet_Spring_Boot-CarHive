@@ -74,8 +74,6 @@ public class UserProfileController {
             if (getUProfile.getStatusCode() != HttpStatus.OK) {
                 return getUProfile;
             }
-            System.out.println("AUTH: ---"+getUProfile.getBody());
-
             UserProfile existingProfile = userProfileService.getById(id);
             if (existingProfile == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("{\"error\": \"UserProfile not found with id: " + id + "\"}");
