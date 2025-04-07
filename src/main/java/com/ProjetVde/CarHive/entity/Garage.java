@@ -12,11 +12,11 @@ public class Garage {
     @Id
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Long id;
-    @Column(unique = true, nullable = false, length = 20)
+    @Column(unique = true, nullable = false, length = 100)
     private String nom;
-    @Column(nullable = false, length = 20)
+    @Column(nullable = false, length = 100)
     private String adresse;
-    @Column(nullable = false, length = 20)
+    @Column(nullable = false, length = 100)
     private String telephone;
 
     // Relation OneToMany avec Voiture

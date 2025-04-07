@@ -38,14 +38,13 @@ public class VoitureController {
 
     @PostMapping("/create")
     public ResponseEntity<?> create(@Valid @RequestBody VoitureRequest voitureRequest, BindingResult bindingResult) {
-
+        Map<String, String> resBody = new HashMap<>();
         if (bindingResult.hasErrors()) {
             // Construire un message d'erreur
-            Map<String, String> erreurs = new HashMap<>();
             bindingResult.getFieldErrors().forEach(error ->
-                    erreurs.put(error.getField(), error.getDefaultMessage())
+                    resBody.put(error.getField(), error.getDefaultMessage())
             );
-            return ResponseEntity.badRequest().body(erreurs);
+            return ResponseEntity.badRequest().body(resBody);
         }
 
         try {
@@ -78,13 +77,17 @@ public class VoitureController {
             voiture.setAnnee(voitureRequest.getAnnee());
             voiture.setGarage(garage);
             voiture.setColor(color);
+            voiture.setImageUrl(voitureRequest.getImageUrl());
             voiture.setUserProfile(userProfile);
 
             // Sauvegarde et retour de l'objet
             Voiture createdVoiture = voitureService.create(voiture);
-            return ResponseEntity.ok(createdVoiture);
+            resBody.put("message", "Create successful");
+            resBody.put("car", String.valueOf(createdVoiture));
+            return ResponseEntity.ok(resBody);
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Une erreur est survenue : " + e.getMessage());
+            resBody.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(resBody);
         }
     }
 
@@ -104,10 +107,11 @@ public class VoitureController {
     @GetMapping("/public/{voitureId}")
     public ResponseEntity<?> getById(@PathVariable Long voitureId) {
         try {
-            Voiture voiture = voitureService.getById(voitureId);
-            if (voiture == null) {
+            Optional<Voiture> voitureOp = voitureService.getById(voitureId);
+            if(voitureOp.isEmpty()) {
                 return ResponseEntity.badRequest().body("La voiture n'existe pas");
             }
+            Voiture voiture = voitureOp.get();
             return ResponseEntity.ok(voiture);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Une erreur est survenue : " + e.getMessage());
@@ -124,44 +128,58 @@ public class VoitureController {
             );
             return ResponseEntity.badRequest().body(erreurs);
         }
-
+System.out.println("voitureRequest: => "+voitureRequest.getAdresseGarage());
         try{
             ResponseEntity<?> response = securityUtils.getAuthenticatedUserProfile();
             UserProfile userProfile = (UserProfile) response.getBody();
 
-            Voiture voiture = voitureService.getById(id);
-            if (voiture == null) {
+            Optional<Voiture> voitureOp = voitureService.getById(id);
+            if(voitureOp.isEmpty()){
                 return ResponseEntity.badRequest().body("La voiture n'existe pas");
             }
+            Voiture voiture = voitureOp.get();
 
             voiture.setImmatriculation(voitureRequest.getImmatriculation());
             voiture.setMarque(voitureRequest.getMarque());
             voiture.setModele(voitureRequest.getModele());
             voiture.setAnnee(voitureRequest.getAnnee());
+            voiture.setImageUrl(voitureRequest.getImageUrl());
+            assert userProfile != null;
             voiture.setUserProfile(userProfileService.getById(userProfile.getId()));
 
             // Gérer la couleur
-            Color color = colorService.getByName(voitureRequest.getColor())
-                    .orElseGet(() -> {
-                        Color newColor = new Color();
-                        newColor.setColor(voitureRequest.getColor());
-                        return colorService.create(newColor);
-                    });
+            // Vérifier si la couleur existe, sinon la créer
+            Optional<Color> colorOpt = colorService.getByName(voitureRequest.getColor());
+            Color color = colorOpt.orElseGet(() -> {
+                Color newColor = new Color();
+                newColor.setColor(voitureRequest.getColor());
+                return colorService.create(newColor);
+            });
             voiture.setColor(color);
-
             // Gérer le garage
-            Garage garage = garageService.getByName(voitureRequest.getNomGarage())
-                    .orElseGet(() -> {
-                        Garage newGarage = new Garage();
-                        newGarage.setNom(voitureRequest.getNomGarage());
-                        newGarage.setAdresse(voitureRequest.getAdresseGarage());
-                        newGarage.setTelephone(voitureRequest.getTelephoneGarage());
-                        return garageService.create(newGarage);
-                    });
-            voiture.setGarage(garage);
+            Optional<Garage> garageOpt = garageService.getByName(voitureRequest.getNomGarage());
+            Garage garage;
 
-            voitureService.update(voiture);
-            return ResponseEntity.ok(voiture);
+            if (garageOpt.isPresent()) {
+                // Le garage existe, on vérifie si l'adresse ou le téléphone ont changé
+                garage = garageOpt.get();
+                if (!garage.getAdresse().equals(voitureRequest.getAdresseGarage()) ||
+                        !garage.getTelephone().equals(voitureRequest.getTelephoneGarage())) {
+                    garage.setAdresse(voitureRequest.getAdresseGarage());
+                    garage.setTelephone(voitureRequest.getTelephoneGarage());
+                    garageService.update(garage); // Mise à jour du garage existant
+                }
+            } else {
+                // Le garage n'existe pas, on le crée
+                Garage newGarage = new Garage();
+                newGarage.setNom(voitureRequest.getNomGarage());
+                newGarage.setAdresse(voitureRequest.getAdresseGarage());
+                newGarage.setTelephone(voitureRequest.getTelephoneGarage());
+                garage = garageService.create(newGarage);
+            }
+            voiture.setGarage(garage);
+            Voiture updateVoiture = voitureService.update(voiture);
+            return ResponseEntity.ok(updateVoiture);
         }catch (Exception e) {
             return ResponseEntity.internalServerError().body("Une erreur est survenue : " + e.getMessage());
         }
@@ -175,17 +193,19 @@ public class VoitureController {
             ResponseEntity<?> response = securityUtils.getAuthenticatedUserProfile();
             UserProfile userProfile = (UserProfile) response.getBody();
 
-            Voiture voiture = voitureService.getById(voitureId);  // Récupération de la voiture par son ID
-            if (voiture == null) {
+            Optional<Voiture> voitureOpt = voitureService.getById(voitureId);
+            if (voitureOpt.isEmpty()) {
                 return ResponseEntity.badRequest().body("La voiture n'existe pas");
             }
+            Voiture voiture = voitureOpt.get();
 
             // Vérifier que l'utilisateur a bien la voiture (si besoin)
+            assert userProfile != null;
             if (!voiture.getUserProfile().getId().equals(userProfile.getId())) {
                 return ResponseEntity.badRequest().body("Cette voiture ne vous appartient pas");
             }
             voitureService.delete(voitureId);
-            return ResponseEntity.ok("Voiture supprimée avec succès");
+            return ResponseEntity.ok(Map.of("message","Voiture supprimée avec succès"));
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Une erreur est survenue : " + e.getMessage());
         }

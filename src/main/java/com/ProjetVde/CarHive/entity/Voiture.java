@@ -23,6 +23,9 @@ public class Voiture {
     @Column(nullable = false, length = 10, columnDefinition = "DATE")
     private String annee;
 
+    @Column(length = 300)
+    private  String imageUrl;
+
     @ManyToOne
     @JoinColumn(name = "garage_id", nullable= false)
     private Garage garage;

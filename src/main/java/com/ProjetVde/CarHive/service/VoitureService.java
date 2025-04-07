@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class VoitureService {
@@ -29,7 +30,12 @@ public class VoitureService {
         return voitureRepository.findAll();
     }
 
-    public Voiture getById(Long id) {
-        return voitureRepository.findById(id).orElse(null);
+    public Optional<Voiture> getById(Long id) {
+        return voitureRepository.findById(id);
     }
+
+    public List<Voiture>getByUserProfileId(Long userProfileId){
+        return voitureRepository.findByUserProfileId(userProfileId);
+    }
+
 }

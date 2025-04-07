@@ -28,6 +28,7 @@
 	</scm>
 	<properties>
 		<java.version>21</java.version>
+		<tomcat.version>11.0.4</tomcat.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -88,12 +89,6 @@
 			<artifactId>jjwt-jackson</artifactId>
 			<version>0.11.5</version>
 		</dependency>
-		<!--<dependency>
-			<groupId>io.jsonwebtoken</groupId>
-			<artifactId>jjwt</artifactId>
-			<version>0.12.0</version>
-		</dependency>-->
-
 		<!-- Spring Security pour sécuriser l'API -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -105,15 +100,6 @@
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-crypto</artifactId>
 		</dependency>
-
-		<!-- Version Hibernate (optionnel, à retirer si tu veux que Spring Boot gère la version) -->
-		<!-- <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-core</artifactId>
-            <version>6.6.9.Final</version>
-            <type>pom</type>
-        </dependency> -->
-
 		<!-- api de persistance (si nécessaire) -->
 		<dependency>
 			<groupId>javax.persistence</groupId>
@@ -129,13 +115,25 @@
 			<scope>provided</scope>
 		</dependency>
 
-		<!-- https://mvnrepository.com/artifact/org.commonjava.web/json-serialization -->
-	<!--	<!<dependency>
-			<groupId>org.commonjava.web</groupId>
-			<artifactId>json-serialization</artifactId>
-			<version>0.5</version>
-		</dependency>-->
+		<!-- https://mvnrepository.com/artifact/org.apache.tomcat.embed/tomcat-embed-core -->
+		<dependency>
+			<groupId>org.apache.tomcat.embed</groupId>
+			<artifactId>tomcat-embed-core</artifactId>
+			<version>${tomcat.version}</version>
+		</dependency>
 
+		<!-- https://mvnrepository.com/artifact/org.apache.tomcat.embed/tomcat-embed-jasper -->
+		<dependency>
+			<groupId>org.apache.tomcat.embed</groupId>
+			<artifactId>tomcat-embed-jasper</artifactId>
+			<version>${tomcat.version}</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.apache.tomcat.embed/tomcat-embed-el -->
+		<dependency>
+			<groupId>org.apache.tomcat.embed</groupId>
+			<artifactId>tomcat-embed-el</artifactId>
+			<version>${tomcat.version}</version>
+		</dependency>
 
 	</dependencies>
 
