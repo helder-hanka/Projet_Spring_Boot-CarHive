@@ -19,8 +19,6 @@ public class UserController {
 
     @Autowired
     SecurityUtils securityUtils;
-//    @Autowired
-//    UserProfile userProfile;
     @Autowired
     VoitureService voitureService;
 
@@ -35,10 +33,7 @@ public class UserController {
             if (userProfile == null || userProfile.getId() == null) {
                 return ResponseEntity.badRequest().body("Could not retrieve user information.");
             }
-            System.out.println("R response----:"+response);
             List<Voiture>myCars = voitureService.getByUserProfileId(userProfile.getId());
-            System.out.println("M myCars----:"+myCars);
-
             return ResponseEntity.ok(myCars);
 
 

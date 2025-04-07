@@ -28,4 +28,7 @@ public class VoitureRequest {
 
     @NotBlank(message = "Le téléphone du garage est obligatoire")
     private String telephoneGarage;
+
+    @NotBlank(message ="L'image Url est obligatoire")
+    private  String imageUrl;
 }
